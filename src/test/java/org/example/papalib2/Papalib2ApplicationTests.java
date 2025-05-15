@@ -1,10 +1,10 @@
-package org.example.papalib;
+package org.example.papalib2;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class PapalibApplicationTests {
+class Papalib2ApplicationTests {
 
     @Test
     void contextLoads() {
