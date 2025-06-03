@@ -3,7 +3,7 @@ package org.example.project.models;
 import jakarta.persistence.*;
 
 @Entity
-public class SocialProfile {
+public class UserProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
