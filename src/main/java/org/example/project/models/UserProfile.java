@@ -9,5 +9,5 @@ public class UserProfile {
     private Long id;
 
     @OneToOne
-    private SocialUser socialUser;
+    private SocialUser user;
 }
