@@ -1,5 +1,6 @@
 package org.example.project.services;
 
+import org.example.project.exceptions.ResourceNotFoundException;
 import org.example.project.models.SocialUser;
 import org.example.project.payloads.UserDTO;
 import org.example.project.repositories.UserRepository;
@@ -40,7 +41,7 @@ public class UserService {
 
             return new ResponseEntity<>(modelMapper.map(savedUser, UserDTO.class), HttpStatus.CREATED);
         }
-        throw new RuntimeException("User with id " + id + " not found");
+        throw new ResourceNotFoundException("User", "id", id);
     }
 
     public ResponseEntity<UserDTO> deleteUser(Long id) {
@@ -50,6 +51,6 @@ public class UserService {
             userRepository.deleteById(id);
             return new ResponseEntity<>(modelMapper.map(optionalSocialUser.get(), UserDTO.class), HttpStatus.CREATED);
         }
-        throw new RuntimeException("User with id " + id + " not found");
+        throw new ResourceNotFoundException("User", "id", id);
     }
 }
