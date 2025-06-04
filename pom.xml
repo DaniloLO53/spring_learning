@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.ecommerce</groupId>
-    <artifactId>java_database_poc</artifactId>
+    <artifactId>Ecommerce</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Java Database POC</name>
-    <description>Java Database POC</description>
+    <name>Ecommerce</name>
+    <description>Ecommerce</description>
     <url/>
     <licenses>
         <license/>

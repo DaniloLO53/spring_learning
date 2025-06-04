@@ -1,7 +1,11 @@
 package org.example.project.services;
 
 import org.example.project.models.SocialUser;
+import org.example.project.payloads.UserDTO;
 import org.example.project.repositories.UserRepository;
+import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,36 +14,41 @@ import java.util.Optional;
 @Service
 public class UserService {
     private UserRepository userRepository;
+    private ModelMapper modelMapper;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, ModelMapper modelMapper) {
         this.userRepository = userRepository;
+        this.modelMapper = modelMapper;
     }
 
     public List<SocialUser> getAllUsers() {
         return userRepository.findAll();
     }
 
-    public SocialUser createUser(SocialUser user) {
-        return userRepository.save(user);
+    public ResponseEntity<UserDTO> createUser(UserDTO userDTO) {
+        SocialUser user = modelMapper.map(userDTO, SocialUser.class);
+        UserDTO savedUserDTO = modelMapper.map((userRepository.save(user)), UserDTO.class);
+        return new ResponseEntity<>(savedUserDTO, HttpStatus.CREATED);
     }
 
-    public SocialUser updateUser(Long id, SocialUser user) {
+    public ResponseEntity<UserDTO> updateUser(Long id, UserDTO userDTO) {
         Optional<SocialUser> optionalSavedUser = userRepository.findById(id);
 
         if (optionalSavedUser.isPresent()) {
             SocialUser savedUser = optionalSavedUser.get();
-            savedUser.setName(user.getName());
-            return savedUser;
+            savedUser.setName(userDTO.getName());
+
+            return new ResponseEntity<>(modelMapper.map(savedUser, UserDTO.class), HttpStatus.CREATED);
         }
         throw new RuntimeException("User with id " + id + " not found");
     }
 
-    public String deleteUser(Long id) {
+    public ResponseEntity<UserDTO> deleteUser(Long id) {
         Optional<SocialUser> optionalSocialUser = userRepository.findById(id);
 
         if (optionalSocialUser.isPresent()) {
             userRepository.deleteById(id);
-            return "User with id " + id + " has been deleted successfully";
+            return new ResponseEntity<>(modelMapper.map(optionalSocialUser.get(), UserDTO.class), HttpStatus.CREATED);
         }
         throw new RuntimeException("User with id " + id + " not found");
     }
