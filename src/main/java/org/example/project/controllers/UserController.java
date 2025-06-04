@@ -2,9 +2,7 @@ package org.example.project.controllers;
 
 import org.example.project.models.SocialUser;
 import org.example.project.services.UserService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,5 +20,18 @@ public class UserController {
         return userService.getAllUsers();
     }
 
+    @PostMapping("/users")
+    public SocialUser createUser(@RequestBody SocialUser user) {
+        return userService.createUser(user);
+    }
 
+    @PutMapping("/users/{id}")
+    public SocialUser updateUser(@PathVariable Long id, @RequestBody SocialUser user) {
+        return userService.updateUser(id, user);
+    }
+
+    @DeleteMapping("/users/{id}")
+    public String deleteUser(@PathVariable Long id) {
+        return userService.deleteUser(id);
+    }
 }
