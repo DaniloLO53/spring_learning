@@ -1,9 +1,9 @@
-package org.example.project.services;
+package org.example.project2.services;
 
-import org.example.project.exceptions.ResourceNotFoundException;
-import org.example.project.models.SocialUser;
-import org.example.project.payloads.UserDTO;
-import org.example.project.repositories.UserRepository;
+import org.example.project2.exceptions.ResourceNotFoundException;
+import org.example.project2.models.SocialUser;
+import org.example.project2.payloads.UserDTO;
+import org.example.project2.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

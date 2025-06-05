@@ -1,4 +1,4 @@
-package org.example.project.models;
+package org.example.project2.models;
 
 import jakarta.persistence.*;
 
@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class SocialGroup {
+public class UserGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

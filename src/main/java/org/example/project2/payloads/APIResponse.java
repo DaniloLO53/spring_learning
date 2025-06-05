@@ -1,4 +1,4 @@
-package org.example.project.payloads;
+package org.example.project2.payloads;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

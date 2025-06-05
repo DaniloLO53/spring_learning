@@ -1,4 +1,4 @@
-package org.example.project.config;
+package org.example.project2.config;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

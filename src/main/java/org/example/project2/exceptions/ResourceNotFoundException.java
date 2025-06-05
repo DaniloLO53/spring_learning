@@ -1,4 +1,4 @@
-package org.example.project.exceptions;
+package org.example.project2.exceptions;
 
 public class ResourceNotFoundException extends RuntimeException {
     private String resourceName;

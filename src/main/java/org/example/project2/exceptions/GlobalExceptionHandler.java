@@ -1,6 +1,6 @@
-package org.example.project.exceptions;
+package org.example.project2.exceptions;
 
-import org.example.project.payloads.APIResponse;
+import org.example.project2.payloads.APIResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

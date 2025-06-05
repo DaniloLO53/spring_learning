@@ -1,10 +1,9 @@
-package org.example.project.controllers;
+package org.example.project2.controllers;
 
 import jakarta.validation.Valid;
-import org.example.project.models.SocialUser;
-import org.example.project.payloads.UserDTO;
-import org.example.project.services.UserService;
-import org.springframework.http.HttpEntity;
+import org.example.project2.models.SocialUser;
+import org.example.project2.payloads.UserDTO;
+import org.example.project2.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

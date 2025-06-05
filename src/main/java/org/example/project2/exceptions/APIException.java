@@ -1,4 +1,4 @@
-package org.example.project.exceptions;
+package org.example.project2.exceptions;
 
 public class APIException extends RuntimeException {
     public APIException() {
