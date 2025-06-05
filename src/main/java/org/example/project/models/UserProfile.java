@@ -16,10 +16,6 @@ public class UserProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Size(min = 3, max = 50, message = "Name must have between 3 and 50 characters")
-    private String name;
-
     @OneToOne
     private SocialUser socialUser;
 }
