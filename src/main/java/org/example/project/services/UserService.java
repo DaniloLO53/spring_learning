@@ -6,9 +6,13 @@ import lombok.NoArgsConstructor;
 import org.example.project.exceptions.APIException;
 import org.example.project.models.SocialUser;
 import org.example.project.payload.UserDTO;
+import org.example.project.payload.UserResponse;
 import org.example.project.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,13 +25,27 @@ public class UserService {
     private UserRepository userRepository;
     private ModelMapper modelMapper;
 
-    public List<UserDTO> getAllUsers() {
-        List<SocialUser> dbUsers = userRepository.findAll();
-        List<UserDTO> usersDTO = dbUsers.stream()
+    public UserResponse getAllUsers(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection) {
+        Sort sortByAndOrder = sortDirection.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Page<SocialUser> dbUsersPage = userRepository.findAll(pageDetails);
+
+        List<UserDTO> usersDTO = dbUsersPage.stream()
                 .map(user -> modelMapper.map(user, UserDTO.class))
                 .toList();
 
-        return usersDTO;
+        UserResponse userResponse = new UserResponse();
+        userResponse.setContent(usersDTO);
+        userResponse.setPageNumber(dbUsersPage.getNumber());
+        userResponse.setPageSize(dbUsersPage.getSize());
+        userResponse.setTotalElements(dbUsersPage.getTotalElements());
+        userResponse.setTotalPages(dbUsersPage.getTotalPages());
+        userResponse.setLastPage(dbUsersPage.isLast());
+
+        return userResponse;
     }
 
     public UserDTO createUser(UserDTO userDTO) {
