@@ -7,9 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Data
@@ -25,16 +23,29 @@ public class SocialUser {
     private String name;
 
     @OneToOne(mappedBy = "socialUser")
-    private UserProfile userProfile;
+    private Profile userProfile;
 
     @OneToMany(mappedBy = "author")
-    private List<Post> posts;
+    private List<Post> posts = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
-            name = "social_user_group",
+            name = "user_group",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "group_id")
     )
-    private Set<UserGroup> groups;
+    private Set<SocialGroup> groups = new HashSet<>();
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SocialUser user = (SocialUser) o;
+        return Objects.equals(id, user.id);
+    }
 }
