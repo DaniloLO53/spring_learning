@@ -22,7 +22,7 @@ public class SocialUser {
     @Size(min = 3, max = 50, message = "Name must have between 3 and 50 characters")
     private String name;
 
-    @OneToOne(mappedBy = "socialUser")
+    @OneToOne(mappedBy = "socialUser", cascade = CascadeType.ALL)
     private Profile userProfile;
 
     @OneToMany(mappedBy = "author")

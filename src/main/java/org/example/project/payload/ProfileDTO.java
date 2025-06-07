@@ -9,12 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class ProfileDTO {
     private Long id;
 
-    @NotBlank
-    @Size(min = 3, max = 50, message = "Name must have between 3 and 50 characters")
-    private String name;
-
-    private ProfileDTO profileDTO;
+    private UserDTO userDTO;
 }
