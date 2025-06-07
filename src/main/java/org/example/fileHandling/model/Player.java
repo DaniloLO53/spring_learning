@@ -1,5 +1,6 @@
-package org.example.fileHandling.models;
+package org.example.fileHandling.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,10 +15,12 @@ public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     @NotNull
     private Boolean active;
 
-    @OneToOne(mappedBy = "player")
+    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL)
     @JoinColumn(name = "profile_id")
+    @JsonIgnore
     private Profile profile;
 }

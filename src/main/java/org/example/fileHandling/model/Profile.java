@@ -1,5 +1,6 @@
-package org.example.fileHandling.models;
+package org.example.fileHandling.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,6 +21,9 @@ public class Profile {
     @Size(min = 3, max = 50, message = "Name must have between 3 and 50 characters")
     private String name;
 
-    @OneToOne
+    private String image;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JsonIgnore
     private Player player;
 }
