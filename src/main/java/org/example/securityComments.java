@@ -1,10 +1,3 @@
-package org.example.security2.controllers;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 // 1 - At SecurityConfig -> add RobotFilter (with a meaningful class)
 // 2 - Create the RobotFilter -> extends OncePerRequestFilter -> logic to authentication -> add RobotAuthentication to Context
 // 3 - Create RobotAuthentication -> extends Authentication (represents either a logged in entity or a bunch of data
@@ -22,19 +15,3 @@ import org.springframework.web.bind.annotation.RestController;
 //     -- In this case, provider returns a populated Authentication (with UserDetails and Authorities) to ProviderManager and
 //        it returns the Authentication and the process is successful
 // 4 - Create UserDetailsService -> returns InMemoryUserDetailsManager
-
-
-
-@RestController
-@RequestMapping("/sec")
-public class HelloController {
-    @GetMapping("/public")
-    public String getHello() {
-        return "Hello, public!";
-    }
-
-    @GetMapping("/private")
-    public String getPrivate(Authentication auth) {
-        return "This is private! Hello, " + auth.getName();
-    }
-}
