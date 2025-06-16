@@ -10,8 +10,8 @@
 //     -- AuthenticationManager receives an Authentication (for example a UsernamePasswordAuthenticationToken) with
 //        username and password not validated yet.
 //     -- It loops through the list of configured AuthenticationProvider (a specialized version of ProviderManager which
-//     -- only deals with a specific token like UsernamePasswordAuthenticationToken).
+//        only deals with a specific token like UsernamePasswordAuthenticationToken).
 //     -- For each provider, it asks provider.supports(token.getClass())? If true, ProviderManager gives the token to the provider (provider.authenticate(token))
 //     -- In this case, provider returns a populated Authentication (with UserDetails and Authorities) to ProviderManager and
-//        it returns the Authentication and the process is successful
+//        it returns the Authentication  and the process is successful
 // 4 - Create UserDetailsService -> returns InMemoryUserDetailsManager
