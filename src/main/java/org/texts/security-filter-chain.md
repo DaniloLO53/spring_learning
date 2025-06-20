@@ -279,11 +279,11 @@ Para internalizar o que aprendemos até aqui, vamos dar uma olhada no fluxo de u
 
 <ol>
 <li>
-<strong>A Requisição Chega:</strong> O <code>AuthenticationManager</code> (que geralmente é uma instância de <code>ProviderManager</code>code>) recebe um objeto <code>Authentication</code> não autenticado (ex: um <code>UsernamePasswordAuthenticationToken</code> vindo de um formulário de login).
+<strong>A Requisição Chega:</strong> O <code>AuthenticationManager</code> (que geralmente é uma instância de <code>ProviderManager</code>) recebe um objeto <code>Authentication</code> não autenticado (ex: um <code>UsernamePasswordAuthenticationToken</code> vindo de um formulário de login).
 </li>
 <br/>
 <li>
-<strong>O Gerente Pergunta:</strong> O <code>ProviderManager</code> começa a iterar sobre sua lista de <code>AuthenticationProviders</code>.
+<strong>O Gerente Pergunta:</strong> O <code>ProviderManager</code> começa a iterar sobre a sua lista de <code>AuthenticationProviders</code>.
 </li>
 <br/>
 <li>
