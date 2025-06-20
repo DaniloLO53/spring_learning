@@ -253,10 +253,10 @@ O <code>ProviderManager</code> então inicia a sua "entrevista" com os especiali
 </li>
 <ul>
 <li>
-Ele chega no seu <code>JwtAuthenticationProvider</code> (se você tiver um) e pergunta: <code>jwtProvider.supports(UsernamePasswordAuthenticationToken.class)</code>?
+Ele chega no seu <code>JwtAuthenticationProvider</code> (caso exista um) e pergunta: <code>jwtProvider.supports(UsernamePasswordAuthenticationToken.class)</code>?
 </li>
 <li>
-Seu <code>JwtAuthenticationProvider</code> provavelmente responderá false, porque ele só foi programado para lidar com um <code>JwtAuthenticationToken</code>.
+O <code>JwtAuthenticationProvider</code> provavelmente responderá false, porque ele só foi programado para lidar com um <code>JwtAuthenticationToken</code>.
 </li>
 <li>
 Ele continua e chega no <code>DaoAuthenticationProvider</code> (o especialista padrão para login/senha) e pergunta: <code>daoProvider.supports(UsernamePasswordAuthenticationToken.class)</code>?
