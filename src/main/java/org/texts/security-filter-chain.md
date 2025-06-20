@@ -8,8 +8,7 @@
     <strong>O problema:</strong> os filtros de segurança, que são beans implementados pelo Spring (desenvolvidos pelo desenvolvedor) precisam ser adicionados à cadeia de filtros do Tomcat. Porém, como o Tomcat irá chamar um filtro que não conhece? É aí que entra o <code>DelegatingFilterProxy</code>.
 </p>
 
-<h2>1 - As 3 camadas dos filtros de segurança</h2>
-
+<h2>1. As 3 camadas dos filtros de segurança</h2>
 
 <ul>
 <li>
@@ -48,3 +47,63 @@ Cada bean <code>SecurityFilterChain</code> possui os mecanismos de segurança a 
 </li>
 </ul>
 
+<h2>2. O filtro de segurança</h2>
+<p>
+Cada filtro de segurança pode ser utilizado para diversas funcionalidades como cors, segurança contra exploits, autenticação, autorização etc. Segue um exemplo: 
+</p>
+
+<pre>
+<code>
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(Customizer.withDefaults())
+            .httpBasic(Customizer.withDefaults())
+            .formLogin(Customizer.withDefaults())
+            .authorizeHttpRequests(authorize -> authorize
+                .anyRequest().authenticated()
+            );
+        return http.build();
+    }
+}
+</code>
+</pre>
+
+<p>
+Podemos, ainda, criar o nosso próprio filtro de segurança. Para isso, basta criar uma classe que estenda <code>Filter</code> ou sua versão especializadas para requisições HTTP <code>OncePerRequestFilter</code>: 
+</p>
+
+<pre>
+<code>
+public class RobotAuthenticationFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        if (!Collections.list(request.getHeaderNames()).contains("x-robot-secret")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (!request.getHeader("x-robot-secret").equals("beep-boop")) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.getWriter().println("Forbidden...");
+            return;
+        }
+
+        RobotAuthenticationToken auth = new RobotAuthenticationToken();
+        SecurityContext newContext = SecurityContextHolder.createEmptyContext();
+        newContext.setAuthentication(auth);
+        SecurityContextHolder.setContext(newContext);
+
+        filterChain.doFilter(request, response);
+    }
+}
+</code>
+</pre>
+
+<p>
+Nesse caso, é o filtro que irá conter a lógica responsável pela segurança.
+</p>
