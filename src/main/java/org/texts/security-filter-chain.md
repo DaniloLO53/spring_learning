@@ -265,7 +265,7 @@ Ele continua e chega no <code>DaoAuthenticationProvider</code> (o especialista p
 O <code>DaoAuthenticationProvider</code> responderá <code>true</code>, pois ele foi projetado exatamente para isso.
 </li>
 </ul>
-
+<br/>
 <li>
 Como a resposta foi true, o <code>ProviderManager</code> para de procurar e delega o trabalho, chamando <code>daoProvider.authenticate(token)</code>.
 </li>
