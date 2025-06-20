@@ -1,5 +1,4 @@
-<h1>Entendendo a cadeia de filtros de segurança do Spring Security</h1>
-
+<h1>Entendendo a arquitetura dos filtros de segurança do Spring Security</h1>
 
 <p>
     Primeiro, precisamos entender a diferença e as associações entre o mundo do Spring  (a classe <code>ApplicationContext</code>) que gerencia o ciclo de vida dos Beans e o mundo do <strong>Tomcat</strong>. O Tomcat é o container de servlets mais utilizado, sendo inclusive utilizado pelo Spring Boot. É ele quem gerencia o ciclo de vida e os filtros de cada servlet. Servlet, por sua vez, é uma classe que estende a classe <code>HttpServlet</code> e recebe as requisições administradas pelo Tomcat vindas do cliente. O Tomcat distribui a requisição para o seu servlet correspondente a partir da URL configurada. Os dois mundos não possuem nada em comum: um não sabe da existência do outro e não compartilham nenhuma classe ou configuração.
@@ -49,32 +48,7 @@ Cada bean <code>SecurityFilterChain</code> possui os mecanismos de segurança a 
 
 <h2>2. O filtro de segurança</h2>
 <p>
-Cada filtro de segurança pode ser utilizado para diversas funcionalidades como cors, segurança contra exploits, autenticação, autorização etc. Segue um exemplo: 
-</p>
-
-<pre>
-<code>
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(Customizer.withDefaults())
-            .httpBasic(Customizer.withDefaults())
-            .formLogin(Customizer.withDefaults())
-            .authorizeHttpRequests(authorize -> authorize
-                .anyRequest().authenticated()
-            );
-        return http.build();
-    }
-}
-</code>
-</pre>
-
-<p>
-Podemos, ainda, criar o nosso próprio filtro de segurança. Para isso, basta criar uma classe que estenda <code>Filter</code> ou sua versão especializadas para requisições HTTP <code>OncePerRequestFilter</code>: 
+Cada filtro de segurança pode ser utilizado para diversas funcionalidades como cors, segurança contra exploits, autenticação, autorização, etc. Podemos, ainda, criar o nosso próprio filtro de segurança. Para isso, basta criar uma classe que estenda <code>Filter</code> ou sua versão especializadas para requisições HTTP <code>OncePerRequestFilter</code>: 
 </p>
 
 <pre>
@@ -105,5 +79,134 @@ public class RobotAuthenticationFilter extends OncePerRequestFilter {
 </pre>
 
 <p>
-Nesse caso, é o filtro que irá conter a lógica responsável pela segurança.
+Nesse caso, é o filtro que irá conter a lógica responsável pela segurança. Podemos adicionar o filtro na cadeia de filtros de segurança assim:
 </p>
+
+<pre>
+<code>
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(Customizer.withDefaults())
+            .httpBasic(Customizer.withDefaults())
+            .formLogin(Customizer.withDefaults())
+            .addFilterBefore(new RobotAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+            .authorizeHttpRequests(authorize -> authorize
+                .anyRequest().authenticated()
+            );
+        return http.build();
+    }
+}
+</code>
+</pre>
+
+<p>
+Veja que utilizamos o método <code>addFilterBefore()</code>. Esse método adiciona um filtro antes de outro filtro que, nesse caso, é o filtro <code>UsernamePasswordAuthenticationFilter</code>, um filtro padrão para autenticação com username e password.
+</p>
+
+<h2>3. A arquitetura de autenticação no Spring Security</h2>
+
+<h3>3.1. A classe de contexto global: <code>SecurityContextHolder</code></h3>
+
+<p>
+Essa é a classe responsável por armazenar todos os dados relevantes que caracterizam um usuário como autenticado. O Spring Security confia nessa classe para saber quem (ou o que) está autenticado ou não. Portanto, o Spring Security não se preocupa em como essa classe é populada; se a classe contém um valor, esse valor seŕa usado como um usuário autenticado.
+</p>
+
+<p>
+Podemos usar essa classe diretamente para dizer se um usuário está autenticado:
+</p>
+
+<pre>
+<code>
+SecurityContext context = SecurityContextHolder.createEmptyContext();
+Authentication authentication = new TestingAuthenticationToken("username", "password", "ROLE_USER");
+context.setAuthentication(authentication);
+
+SecurityContextHolder.setContext(context);
+</code>
+</pre>
+
+<ol>
+<li>
+Criamos um contexto vazio a partir do método estático <code>SecurityContextHolder.createEmptyContext()</code>. É importante criar um contexto vazio, em vez de fazer <code>SecurityContextHolder.getContext().setAuthentication(authentication)</code>. Essa prática evita "race conditions" em múltiplas threads.
+</li>
+<li>
+Criamos uma instância de uma autenticação (<code>Authentication</code>, a qual ainda iremos discutir).
+</li>
+<li>
+Adicionamos o objeto de autenticação ao contexto.
+</li>
+<li>
+Adicionamos o contexto ao <code>SecurityContextHolder</code>, que é responsável por armazenar o contexto de autenticação.
+</li>
+</ol>
+
+<p>
+Para acessar o objeto autenticado, podemos fazer:
+</p>
+
+<pre>
+<code>
+SecurityContext context = SecurityContextHolder.getContext();
+Authentication authentication = context.getAuthentication();
+String username = authentication.getName();
+Object principal = authentication.getPrincipal();
+Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+</code>
+</pre>
+
+<h3>3.2. A classe que representa a autenticação: <code>Authentication</code></h3>
+
+<p>
+Essa classe possui dois sentidos: ela pode ser ou uma entidade já autenticada, ou uma série de dados que ainda serão validados e identificados (ou não) como uma entidade legítima que quer se autenticar.
+</p>
+<p>
+Caso seja uma entidade já autenticada, podemos obtê-la a partir do <code>SecurityContextHolder</code>, como fizemos no exemplo acima. Caso seja uma entidade a ser autenticada, podemos passá-la para <code>AuthenticationManager</code>, que ainda falaremos. Nesse caso, <code>isAuthenticated()</code> retorna falso.
+</p>
+<p>
+Por padrão, objetos do tipo <code>Authentication</code> possuem <strong>"Token"</strong> ao final do nome, como, por exemplo, <code>UsernamePasswordAuthenticationToken</code>.
+</p>
+<p>
+Um Authentication possui 3 objetos relevantes:
+</p>
+<ol>
+<li>
+<code>principal:</code> é o que identifica o usuário. Quando se trata de uma autenticação com username/password, geralmente é uma instância de <code>UserDetails</code>.
+</li>
+<li>
+<code>credentials:</code> geralmente é o password. Em muitos casos é limpo após o usuário ser autenticado para evitar vazamentos.
+</li>
+<li>
+<code>authorities:</code> instâncias da classe <code>GrantedAuthority</code> que cuidam das permissões do usuário (scope e role).
+</li>
+</ol>
+
+<p>
+A classe <code>GrantedAuthority</code> pode ser obtida através de <code>Authorization.getAuthorities()</code> que retorna uma coleção dessa classe. Ela representa uma autoridade designada ao <code>principal</code> e, geralmente, trata-se de "roles" como <strong>"ROLE_user", "ROLE_admin"</strong>, etc.
+</p>
+<p>
+Usualmente, as instâncias de <code>GrantedAuthority</code> são carregadas por meio de implementações da interface <code>UserDetailsService</code> 
+</p>
+
+<h3>3.3. A API geral de autenticação: <code>AuthenticationManager</code></h3>
+
+<p>
+Essa é uma classe genérica responsável por definir como o Spring Security lida com autenticação. A autenticação (instância <code>Authentication</code>) retornada é passada para o <code>SecurityContextHolder</code>. Entretanto, geralmente essa classe não é implementada diretamente pelo desenvolvedor. A implementação mais comum para essa classe é a <code>ProviderManager</code>.
+</p>
+
+<h3>3.4. O gerente dos processos de autenticação: <code>ProviderManager</code></h3>
+
+<p>
+É a implementação mais comum de <code>AuthenticationManager</code>. A sua função é orquestrar os processos de autenticação realizados pelo <code>AuthenticationProvider</code>. Cada <code>AuthenticationProvider</code> é responsável por um tipo de autenticação: podemos ter um <code>AuthenticationProvider</code> que cuida da autenticação por formulário (com DaoAuthenticationProvider) e um que cuida da autenticação por token de API (com seu <code>JwtAuthenticationProvider</code> customizado).
+</p>
+
+<p>
+Portanto, essa classe não possui qualquer lógica de autenticação, mas mantém uma lista de <code>AuthenticationProvider</code> - classes especializadas em tipos de autenticação específicos. Para cada autenticação que chega, a classe verifica qual é a <code>AuthenticationProvider</code> responsável por lidar com aquele tipo de autenticação.
+</p>
+
+<h3>3.5. O autenticador especialista: <code>AuthenticationProvider</code>
+
