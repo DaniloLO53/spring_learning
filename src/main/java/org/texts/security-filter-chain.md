@@ -251,7 +251,6 @@ Esse token é passado para o <code>ProviderManager</code>.
 <li>
 O <code>ProviderManager</code> então inicia a sua "entrevista" com os especialistas:
 </li>
-<br/>
 <ul>
 <li>
 Ele chega no seu <code>JwtAuthenticationProvider</code> (se você tiver um) e pergunta: <code>jwtProvider.supports(UsernamePasswordAuthenticationToken.class)</code>?
