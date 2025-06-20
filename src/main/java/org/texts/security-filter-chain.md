@@ -134,12 +134,15 @@ SecurityContextHolder.setContext(context);
 <li>
 Criamos um contexto vazio a partir do método estático <code>SecurityContextHolder.createEmptyContext()</code>. É importante criar um contexto vazio, em vez de fazer <code>SecurityContextHolder.getContext().setAuthentication(authentication)</code>. Essa prática evita "race conditions" em múltiplas threads.
 </li>
+<br/>
 <li>
 Criamos uma instância de uma autenticação (<code>Authentication</code>, a qual ainda iremos discutir).
 </li>
+<br/>
 <li>
 Adicionamos o objeto de autenticação ao contexto.
 </li>
+<br/>
 <li>
 Adicionamos o contexto ao <code>SecurityContextHolder</code>, que é responsável por armazenar o contexto de autenticação.
 </li>
@@ -177,9 +180,11 @@ Um Authentication possui 3 objetos relevantes:
 <li>
 <code>principal:</code> é o que identifica o usuário. Quando se trata de uma autenticação com username/password, geralmente é uma instância de <code>UserDetails</code>.
 </li>
+<br/>
 <li>
 <code>credentials:</code> geralmente é o password. Em muitos casos é limpo após o usuário ser autenticado para evitar vazamentos.
 </li>
+<br/>
 <li>
 <code>authorities:</code> instâncias da classe <code>GrantedAuthority</code> que cuidam das permissões do usuário (scope e role).
 </li>
@@ -208,5 +213,64 @@ Essa é uma classe genérica responsável por definir como o Spring Security lid
 Portanto, essa classe não possui qualquer lógica de autenticação, mas mantém uma lista de <code>AuthenticationProvider</code> - classes especializadas em tipos de autenticação específicos. Para cada autenticação que chega, a classe verifica qual é a <code>AuthenticationProvider</code> responsável por lidar com aquele tipo de autenticação.
 </p>
 
-<h3>3.5. O autenticador especialista: <code>AuthenticationProvider</code>
+<h3>3.5. O autenticador especialista: <code>AuthenticationProvider</code></h3>
 
+<p>
+Trata-se de uma interface que define um contrato para processar um tipo específico de autenticação. Sua responsabilidade é receber um objeto <code>Authentication</code> (com as credenciais do usuário), validá-lo e retornar um novo objeto <code>Authentication</code> totalmente preenchido e autenticado, ou lançar uma exceção se a autenticação falhar.
+</p>
+
+<p>
+Dessa forma, cada classe encapsula uma lógica de autenticação, tornando o sistema modular. O <code>DaoAuthenticationProvider</code>, por exemplo, é a implementação padrão do Spring Security que sabe como autenticar usando um <code>UserDetailsService</code> (para buscar no banco) e um <code>PasswordEncoder</code> (para comparar senhas). Para autenticar com JWT, criamos o nosso próprio <code>AuthenticationProvider</code>.
+</p>
+
+<p>
+Esse contrato possui duas implementações principais e obrigatórias:
+</p>
+
+<ol>
+<li>
+<code>Authentication authenticate(Authentication authentication):</code> O método principal onde a lógica de validação acontece.
+</li>
+<br/>
+<li>
+<code>boolean supports(Class<?> authentication):</code> Um método crucial onde o Provider diz se ele sabe ou não lidar com um determinado tipo de objeto <code>Authentication</code>. O <code>DaoAuthenticationProvider</code>, por exemplo, só suporta <code>UsernamePasswordAuthenticationToken</code>. É aqui onde reside a especialidade de cada Provider; é o método utilizado pelo <code>ProviderManager</code> para saber se o Provider é o especialista responsável por determinada autenticação.
+</li>
+</ol>
+
+<h4>3.5.1. Olhando um pouco mais de perto o <code>boolean supports(Class<?> authentication):</code></h4>
+
+<ol>
+<li>
+Um usuário envia um login e senha através de um formulário. Um filtro do Spring Security (como o <code>UsernamePasswordAuthenticationFilter</code>) intercepta isso e cria um objeto do tipo <code>UsernamePasswordAuthenticationToken</code>.
+</li>
+<br/>
+<li>
+Esse token é passado para o <code>ProviderManager</code>.
+</li>
+<br/>
+<li>
+O <code>ProviderManager</code> então inicia a sua "entrevista" com os especialistas:
+</li>
+<br/>
+<ul>
+<li>
+Ele chega no seu <code>JwtAuthenticationProvider</code> (se você tiver um) e pergunta: <code>jwtProvider.supports(UsernamePasswordAuthenticationToken.class)</code>?
+</li>
+<br/>
+<li>
+Seu <code>JwtAuthenticationProvider</code> provavelmente responderá false, porque ele só foi programado para lidar com um <code>JwtAuthenticationToken</code>.
+</li>
+<br/>
+<li>
+Ele continua e chega no <code>DaoAuthenticationProvider</code> (o especialista padrão para login/senha) e pergunta: <code>daoProvider.supports(UsernamePasswordAuthenticationToken.class)</code>?
+</li>
+<br/>
+<li>
+O <code>DaoAuthenticationProvider</code> responderá <code>true</code>, pois ele foi projetado exatamente para isso.
+</li>
+</ul>
+
+<li>
+Como a resposta foi true, o <code>ProviderManager</code> para de procurar e delega o trabalho, chamando <code>daoProvider.authenticate(token)</code>.
+</li>
+</ol>
