@@ -270,3 +270,44 @@ O <code>DaoAuthenticationProvider</code> responderá <code>true</code>, pois ele
 Como a resposta foi true, o <code>ProviderManager</code> para de procurar e delega o trabalho, chamando <code>daoProvider.authenticate(token)</code>.
 </li>
 </ol>
+
+<h3>3.6. Exemplo de fluxo da requisição</h3>
+
+<p>
+Para internalizar o que aprendemos até aqui, vamos dar uma olhada no fluxo de uma requisição:
+</p>
+
+<ol>
+<li>
+<strong>A Requisição Chega:</strong> O <code>AuthenticationManager</code> (que geralmente é uma instância de <code>ProviderManager</code>code>) recebe um objeto <code>Authentication</code> não autenticado (ex: um <code>UsernamePasswordAuthenticationToken</code> vindo de um formulário de login).
+</li>
+<br/>
+<li>
+<strong>O Gerente Pergunta:</strong> O <code>ProviderManager</code> começa a iterar sobre sua lista de <code>AuthenticationProviders</code>.
+</li>
+<br/>
+<li>
+<strong>Busca pelo Especialista:</strong> Para cada provider na lista, o <code>ProviderManager</code> pergunta: "provider, você sabe lidar com esse tipo de token?" (chamando o método <code>provider.supports(token.getClass())).</code>
+</li>
+<br/>
+<li>
+<strong>Especialista Encontrado</strong>: Assim que um provider responde true, o <code>ProviderManager</code> para de procurar e entrega o token para esse especialista, dizendo: "Valide isso para mim!" (chamando o método <code>provider.authenticate(token))</code>.
+</li>
+<br/>
+<li>
+<strong>Validação</strong>:
+<ul>
+<li>
+Se o provider conseguir autenticar com sucesso, ele retorna um objeto <code>Authentication</code> totalmente preenchido <code>(authenticated = true).</code> O <code>ProviderManager</code> recebe esse objeto e o retorna como resultado final do processo. Fim da história.
+</li>
+<br/>
+<li>
+Se o provider falhar (ex: senha incorreta) e lançar uma <code>AuthenticationException</code>, o <code>ProviderManager</code> pode, dependendo da configuração, continuar e tentar o próximo provider na lista que também suporte o mesmo tipo de token.
+</li>
+</ul>
+</li>
+<br/>
+<li>
+<strong>Nenhum Especialista Encontrado:</strong> Se o <code>ProviderManager</code> percorrer toda a lista e nenhum provider suportar o tipo de <code>Authentication</code> token fornecido, ele lançará uma <code>ProviderNotFoundException</code>.
+</li>
+</ol>
