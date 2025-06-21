@@ -311,3 +311,152 @@ Se o provider falhar (ex: senha incorreta) e lançar uma <code>AuthenticationExc
 <strong>Nenhum Especialista Encontrado:</strong> Se o <code>ProviderManager</code> percorrer toda a lista e nenhum provider suportar o tipo de <code>Authentication</code> token fornecido, ele lançará uma <code>ProviderNotFoundException</code>.
 </li>
 </ol>
+
+<h2>4. Autenticação com username / password</h2>
+
+<p>
+Estudamos a arquitetura dos filtros servlets e a dos filtros de segurança com os seus principais agentes e camadas. Agora, vamos dar uma olhada em uma implementação comum do Spring Security para autenticações que exigem password e username. 
+</p>
+
+<h3>4.1. <code>UserDetails</code> e <code>UserDetailsService</code></h3>
+
+<p>
+O <code>UserDetails</code>, como ja vimos, é a classe que representa as informações de autenticação da entidade em um formato que o Spring Security entende e contém dados como o password encriptado e as permissões. Ela faz parte da classe <code>Authentication</code> após ser populada por meio do <code>UserDetailsService</code>. Essa última classe, por sua vez, é a que contém a lógica de busca das informações do usuário - ela não conhece nada sobre a lógica de segurança; dado um <code>username</code>, ela apenas busca o usuário no banco de dados e retorna uma instância da classe <code>UserDetails</code> por meio do método <code>loadUserByUsername(String username)</code>.
+</p>
+<p>
+Assim, entendemos que <code>UserDetailsService</code> serve como uma camada de abstração para a lógica de consulta ao banco de dados. Isso torna o Spring Security modular, pois ele não se importa com a fonte dos dados (se é MongoDB, MySQL, etc) e nem com a consulta - ele apenas confia ao <code>UserDetailsService</code> a responsabilidade de lidar com essa tarefa e espera receber um objeto de <code>UserDetails</code> para ser adicionado ao <code>Authentication</code>. 
+</p>
+<p>
+Surge, agora, a seguinte dúvida: vimos que o Spring Security lida com a autenticação por meio do <code>AuthenticationProvider</code> e existem várias implementações para essa classe. Qual seria uma implementação responsável por lidar com autenticações que exigem username e password? A resposta é: <code>DaoAuthenticationProvider</code>. 
+</p>
+
+<h3>4.2. Entendendo um pouco melhor o <code>UserDetails</code></h3>
+
+<p>
+ O <code>UserDetails</code> é criado <strong>antes</strong> que a autenticação seja confirmada, mas ele vive e representa o usuário <strong>após</strong> a autenticação ser bem-sucedida. Podemos fazer uma analogia com um check-in em um aeroporto
+</p>
+<ol>
+<li>
+<strong>Você (Usuário):</strong> Chega e diz seu nome (username) e entrega seu passaporte (password).
+</li>
+<br/>
+<li>
+<strong>Atendente (<code>AuthenticationProvider</code>):</strong> Ele pega seu nome para te encontrar no sistema.
+</li>
+<br/>
+<li>
+<strong>Sistema da Companhia Aérea (<code>UserDetailsService</code>):</strong> O atendente digita seu nome no sistema, que busca e retorna sua reserva completa.
+</li>
+<br/>
+<li>
+<strong>A Reserva Completa <code>(UserDetails):</code></strong> Este é o <code>UserDetails</code>. É o conjunto de dados "oficiais" sobre você que está no sistema da companhia: seu nome completo, número do passaporte, status do voo, etc. Note que isso acontece ANTES de você ser oficialmente "autenticado" (ter seu check-in concluído). A reserva é a matéria-prima para a verificação.
+</li>
+<br/>
+<li>
+<strong>A Verificação:</strong> O atendente agora compara o passaporte que você entregou na mão com o número do passaporte que está na sua reserva (<code>UserDetails</code>).
+</li>
+<br/>
+<li>
+<strong>O Cartão de Embarque (<code>Authentication</code> autenticado):</strong> Se tudo bater, ele te entrega o cartão de embarque. Este cartão confirma que sua identidade foi validada com sucesso e, crucialmente, ele está vinculado à sua reserva original (<code>UserDetails</code>).
+</li>
+</ol>
+
+<p>
+Agora que já entendemos o roteiro da autenticação e o papel do <code>UserDetails</code>, vamos ver o fluxo técnico da autenticação dentro do Spring Security
+</p>
+
+<ol>
+<li>
+<p>
+<strong>O "ANTES": Matéria-Prima para a Validação</strong>
+</p>
+<p>
+Quando um usuário tenta se logar, o <code>AuthenticationProvider</code> (geralmente o <code>DaoAuthenticationProvider</code>) precisa verificar se a senha fornecida está correta. Mas, correta em relação a quê? Em relação à senha que está armazenada no seu banco de dados.
+</p>
+<p>
+Para obter essa informação, ele faz o seguinte:
+</p>
+<ul>
+<li>
+Ele pega o username que o usuário digitou.
+</li>
+<br/>
+<li>
+Chama o método <code>loadUserByUsername(username)</code> do seu <code>UserDetailsService</code>.
+</li>
+<br/>
+<li>
+Seu <code>UserDetailsService</code> vai ao banco, busca o usuário e cria um objeto <code>UserDetails</code> com os dados armazenados (username, senha codificada, papéis, etc.).
+</li>
+</ul>
+<p>
+Neste momento, o <code>UserDetails</code> foi criado, mas a autenticação ainda não foi concluída. Ele serve como a "fonte da verdade" contra a qual a tentativa de login será comparada.
+</p>
+</li>
+<br>
+<li>
+<p>
+<strong>O "DEPOIS": A Identidade do Usuário Autenticado</strong>
+</p>
+<p>
+Agora, o <strong>AuthenticationProvider</strong> pega a senha que o usuário digitou, a codifica e a compara com a senha obtida de <code>userDetails.getPassword().</code>
+</p>
+<ul>
+<li>
+Se a autenticação falhar, o objeto <code>UserDetails</code> é descartado e uma exceção é lançada.
+</li>
+<br/>
+<li>
+Se a autenticação for bem-sucedida, o Spring Security cria um novo objeto <code>Authentication</code> (o "cartão de embarque"), que representa a sessão autenticada do usuário. E o mais importante: o <code>principal</code> (a identidade principal) dentro deste novo objeto <code>Authentication</code> é o próprio objeto <code>UserDetails</code> que foi carregado anteriormente.
+</li>
+</ul>
+<p>
+Esse objeto <code>Authentication</code> é então colocado no <code>SecurityContextHolder</code>, onde representa o usuário logado durante toda a sua sessão.
+</p>
+</li>
+</ol>
+
+<p>
+Portanto, o <code>UserDetails</code> não é o resultado da autenticação, mas sim a <strong>matéria-prima</strong> necessária para ela, que depois é "promovida" a ser a representação oficial da identidade do usuário na sessão.
+</p>
+
+<h3>4.3. <code>DaoAuthenticationProvider</code></h3>
+
+<p>
+Foi dito, anteriormente, que o Spring Security delega o acesso aos dados para o <code>UserDetailsService</code>, e a parte do Spring Security responsável por essa delegação é a <code>DaoAuthenticationProvider</code>. 
+</p>
+<p>
+<strong>DAO</strong> significa <strong>data access object</strong>, isto é, trata-se de um objeto responsável pelo acesso aos dados. Porém, esse provider delega o serviço ao <code>UserDetailsService</code>, conforme já vimos.
+</p>
+
+<h3>4.4. Exemplo de fluxo de autenticação do tipo username / password</h3>
+
+<ol>
+<li>
+Um <code>UsernamePasswordAuthenticationToken</code> chega ao <code>ProviderManager</code>, que o delega ao <code>DaoAuthenticationProvider</code> (porque ele <em>"supports"</em> esse tipo de token). Lembre-se que o <code>ProviderManager</code> "pergunta" a cada <code>AuthenticationProvider</code> de sua lista qual é o responsável por lidar com o token recebido (que é um <code>Authentication</code>); e ele faz isso por meio do método <code>boolean supports(Class<?> authentication)</code>.
+</li>
+<br/>
+<li>
+O <code>DaoAuthenticationProvider</code> recebe o token e extrai o <code>username</code>.
+</li>
+<br/>
+<li>
+Agora ele precisa dos dados reais do usuário para comparar. Ele então chama o <code>userDetailsService.loadUserByUsername(username)</code>.
+</li>
+<br/>
+<li>
+Seu <code>UserDetailsService</code> vai ao banco de dados, encontra o usuário e retorna um objeto <code>UserDetails</code>.
+</li>
+<br/>
+<li>
+O <code>DaoAuthenticationProvider</code> agora tem tudo o que precisa: a senha enviada pelo usuário (do token original) e o <code>UserDetails</code> (com a senha real codificada e as permissões).
+</li>
+<br/>
+<li>
+Ele usa o <code>PasswordEncoder</code> para comparar as senhas.
+</li>
+<br/>
+<li>
+Se a comparação for bem-sucedida, ele cria e retorna um novo <code>Authentication</code> totalmente autenticado.
+</li>
+</ol>
