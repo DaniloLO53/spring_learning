@@ -457,7 +457,19 @@ Foi dito, anteriormente, que o Spring Security delega o acesso aos dados para o 
 
 <ol>
 <li>
-Um <code>UsernamePasswordAuthenticationToken</code> chega ao <code>ProviderManager</code>, que o delega ao <code>DaoAuthenticationProvider</code> (porque ele <em>"supports"</em> esse tipo de token). Lembre-se que o <code>ProviderManager</code> "pergunta" a cada <code>AuthenticationProvider</code> de sua lista qual é o responsável por lidar com o token recebido (que é um <code>Authentication</code>); e ele faz isso por meio do método <code>boolean supports(Class<?> authentication)</code>.
+Um usuário envia um username e um password.
+</li>
+<br/>
+<li>
+Um controller intercepta a requisição e extrai essas duas informações. No caso da implementação padrão com <code>formLogin()</code>, a interceptação é feita por meio de um filtro (<code>UsernamePasswordAuthenticationFilter</code>).
+</li>
+<br/>
+<li>
+Uma <code>Authentication</code> (sua implementação: <code>UsernamePasswordAuthenticationToken</code>) é criada. Neste ponto, a <code>Authentication</code> possui como <code>principal</code> o username e como <code>credentials</code> o password, e está marcada como não autenticada.
+</li>
+<br/>
+<li>
+O token <code>UsernamePasswordAuthenticationToken</code> chega ao <code>AuthenticationManager</code>(sua implementação <code>ProviderManager</code>), que o delega ao <code>DaoAuthenticationProvider</code> (porque ele <em>"supports"</em> esse tipo de token). Lembre-se que o <code>ProviderManager</code> "pergunta" a cada <code>AuthenticationProvider</code> de sua lista qual é o responsável por lidar com o token recebido (que é um <code>Authentication</code>); e ele faz isso por meio do método <code>boolean supports(Class<?> authentication)</code>.
 </li>
 <br/>
 <li>
@@ -469,7 +481,7 @@ Agora ele precisa dos dados reais do usuário para comparar. Ele então chama o 
 </li>
 <br/>
 <li>
-Seu <code>UserDetailsService</code> vai ao banco de dados, encontra o usuário e retorna um objeto <code>UserDetails</code>.
+Seu <code>UserDetailsService</code> vai ao banco de dados, encontra o usuário e retorna um objeto <code>UserDetails</code> com o username, senha codificada e permissões.
 </li>
 <br/>
 <li>
@@ -481,6 +493,42 @@ Ele usa o <code>PasswordEncoder</code> para comparar as senhas.
 </li>
 <br/>
 <li>
-Se a comparação for bem-sucedida, ele cria e retorna um novo <code>Authentication</code> totalmente autenticado.
+Se bater, ele retorna um novo <code>UsernamePasswordAuthenticationToken</code>, mas agora o principal é o objeto <code>UserDetails</code>, <code>credentials</code> é <code>null</code> e as <code>authorities</code> estão populadas. Este token está marcado como autenticado.
 </li>
 </ol>
+
+<p>
+Dando uma olhada no antes e depois do token:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Característica</th>
+      <th>Token ANTES da Autenticação</th>
+      <th>Token APÓS a Autenticação</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>getPrincipal()</code></td>
+      <td>Retorna o String do username.</td>
+      <td>Retorna o objeto <code>UserDetails</code> completo.</td>
+    </tr>
+    <tr>
+      <td><code>getCredentials()</code></td>
+      <td>Retorna o String da senha.</td>
+      <td>Retorna <code>null</code>.</td>
+    </tr>
+    <tr>
+      <td><code>getAuthorities()</code></td>
+      <td>Coleção vazia.</td>
+      <td>Coleção de <code>GrantedAuthority</code> do usuário.</td>
+    </tr>
+    <tr>
+      <td><code>isAuthenticated()</code></td>
+      <td><code>false</code></td>
+      <td><code>true</code></td>
+    </tr>
+  </tbody>
+</table>
