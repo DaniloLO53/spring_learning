@@ -321,7 +321,7 @@ Estudamos a arquitetura dos filtros servlets e a dos filtros de segurança com o
 <h3>4.1. <code>UserDetails</code> e <code>UserDetailsService</code></h3>
 
 <p>
-O <code>UserDetails</code>, como ja vimos, é a classe que representa as informações de autenticação da entidade em um formato que o Spring Security entende e contém dados como o password encriptado e as permissões. Ela faz parte da classe <code>Authentication</code> após ser populada por meio do <code>UserDetailsService</code>. Essa última classe, por sua vez, é a que contém a lógica de busca das informações do usuário - ela não conhece nada sobre a lógica de segurança; dado um <code>username</code>, ela apenas busca o usuário no banco de dados e retorna uma instância da classe <code>UserDetails</code> por meio do método <code>loadUserByUsername(String username)</code>.
+O <code>UserDetails</code>, como ja vimos, é a classe que representa as informações de autenticação da entidade em um formato que o Spring Security entende e contém dados como o password encriptado e as permissões. Ela faz parte da classe <code>Authentication</code> após ser populada por meio do <code>UserDetailsService</code> (quando a autenticação é bem sucedida). Essa última classe, por sua vez, é a que contém a lógica de busca das informações do usuário - ela não conhece nada sobre a lógica de segurança; dado um <code>username</code>, ela apenas busca o usuário no banco de dados e retorna uma instância da classe <code>UserDetails</code> por meio do método <code>loadUserByUsername(String username)</code>. Logo, o <code>UserDetails</code> funciona como um <strong>DTO</strong> - um formato de dado reconhecível pelo Spring Security.
 </p>
 <p>
 Assim, entendemos que <code>UserDetailsService</code> serve como uma camada de abstração para a lógica de consulta ao banco de dados. Isso torna o Spring Security modular, pois ele não se importa com a fonte dos dados (se é MongoDB, MySQL, etc) e nem com a consulta - ele apenas confia ao <code>UserDetailsService</code> a responsabilidade de lidar com essa tarefa e espera receber um objeto de <code>UserDetails</code> para ser adicionado ao <code>Authentication</code>. 
@@ -399,7 +399,7 @@ Neste momento, o <code>UserDetails</code> foi criado, mas a autenticação ainda
 <strong>O "DEPOIS": A Identidade do Usuário Autenticado</strong>
 </p>
 <p>
-Agora, o <strong>AuthenticationProvider</strong> pega a senha que o usuário digitou, a codifica e a compara com a senha obtida de <code>userDetails.getPassword().</code>
+Agora, o <code>AuthenticationProvider</code> pega a senha que o usuário digitou, a codifica e a compara com a senha obtida de <code>userDetails.getPassword().</code>
 </p>
 <ul>
 <li>
