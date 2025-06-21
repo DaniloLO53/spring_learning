@@ -420,6 +420,30 @@ Esse objeto <code>Authentication</code> é então colocado no <code>SecurityCont
 Portanto, o <code>UserDetails</code> não é o resultado da autenticação, mas sim a <strong>matéria-prima</strong> necessária para ela, que depois é "promovida" a ser a representação oficial da identidade do usuário na sessão.
 </p>
 
+<p><strong>Resumo</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Momento</th>
+      <th>Papel do <code>UserDetails</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Antes</strong> da Autenticação</td>
+      <td>Não existe ainda.</td>
+    </tr>
+    <tr>
+      <td><strong>Durante</strong> a Autenticação</td>
+      <td>É criado pelo <code>UserDetailsService</code> para servir como a fonte de dados para a validação. Contém os dados do banco.</td>
+    </tr>
+    <tr>
+      <td><strong>Após</strong> a Autenticação</td>
+      <td>Ele se torna o <code>principal</code> dentro do objeto <code>Authentication</code>. Ele representa a identidade do usuário logado.</td>
+    </tr>
+  </tbody>
+</table>
+
 <h3>4.3. <code>DaoAuthenticationProvider</code></h3>
 
 <p>
